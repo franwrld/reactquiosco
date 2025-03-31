@@ -28,11 +28,7 @@ export default function Layout() {
   const {user,error} = useAuth({middleware: 'auth'})
   
   return (
-
-
     <>
-
-
     <div className='md:flex'>
     
       <Sidebar/>

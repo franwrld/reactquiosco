@@ -1,87 +1,149 @@
 import {createContext, useState,useEffect} from 'react'
-import {categorias as categoriasDB} from '../data/categorias'
+import useQuiosco from '../hooks/useQuiosco'
 import clienteAxios from '../config/axios'
 import {toast} from 'react-toastify'
 
 const QuioscoContext = createContext()
-
 const QuioscoProvider = ({children}) => {
 
     const [categorias, setCategorias] = useState([]);
     const [categoriaActual, setCategoriaActual] = useState({});
     const [modal, setModal] = useState(false);
-    // {} porque es un objeto inicia como vacio
     const [producto, setProducto] = useState({});
-    // Stado para el pedido
     const [pedido, setPedido] = useState([]);
     const [total, setTotal] = useState(0);
+    const [cargando, setCargando] = useState(false);
 
-    // Calcular Total
     useEffect(() => {
-        const nuevoTotal = pedido.reduce((total, producto) => (producto.precio * producto.cantidad) + total, 0 )
+        const nuevoTotal = pedido.reduce((total, producto) => (producto.precio * producto.cantidad) + total, 0)
         setTotal(nuevoTotal)
     }, [pedido])
 
-    // API desde Laravel Categorias
     const obtenerCategorias = async () => {
-      //  const token = localStorage.getItem('AUTH_TOKEN')
+        const token = localStorage.getItem('AUTH_TOKEN');
         try {
-            const {data} = await clienteAxios('/api/categorias')
-            setCategorias(data.data)
-            setCategoriaActual(data.data[0])
+            const { data } = await clienteAxios('/api/categorias', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            setCategorias(data.data);
+            if (data.data.length > 0) {
+                setCategoriaActual(data.data[0]);
+            }
         } catch (error) {
-            console.log(error)
+            console.error('Error al obtener categorías:', error);
         }
-    }
+    };
 
     useEffect(() => {
         obtenerCategorias();
     }, [])
 
-    
-
     const handleClickCategoria = id => {
         const categoria = categorias.filter(categoria => categoria.id === id)[0]
         setCategoriaActual(categoria)
     }
-    // !modal nos permitira cambiar estado entre false y true automaticamente, en vez de ponerle true
+
     const handleClickModal = () => {
         setModal(!modal)
     }
-
+    
     const handleSetProducto = producto => {
         setProducto(producto)
     }
-    // categoria_id y imagen no nos interesan para agregar al pedido asi que los sacamos del arreglo
-    const handleAgregarPedido = ({categoria_id, ...producto}) => {
-        
-        // Si al cambiar cantidad que ponga la misma y no que sume (editar mismo producto agregado)
-        if(pedido.some( pedidoState => pedidoState.id === producto.id )) {
-            const pedidoActualizado = pedido.map( pedidoState => pedidoState.id === producto.id ? producto : pedidoState)
 
-            setPedido(pedidoActualizado)
-            toast.success('Guardado Correctamente')
+    const handleAgregarPedido = ({categoria_id,...producto}) => {
+     
+
+        if(pedido.some( pedidoState => pedidoState.id === producto.id )) {
+            const PedidoActualizado = pedido.map( pedidoState =>
+                 pedidoState.id === producto.id ? producto : pedidoState)
+                setPedido(PedidoActualizado)
+                toast.success(`${producto.nombre} Guardado correctamente`)
         } else {
-            // Toma una copia de lo que haya en pedido (pedido), y agregale este producto nuevo (producto)
-            // cuando agregamos un producto primera vez
             setPedido([...pedido, producto])
-            toast.success('Agregado al pedido')
+            toast.success(`${producto.nombre} agregado al pedido`)
         }
     }
 
     const handleEditarCantidad = id => {
-        const productoActualizar = pedido.filter(producto => producto.id === id)[0]
+        const productoActualizar = pedido.filter( producto => producto.id === id)[0]
         setProducto(productoActualizar)
         setModal(!modal)
     }
 
     const handleEliminarProductoPedido = id => {
-        const pedidoActualizado = pedido.filter(producto => producto.id !== id)
+        const pedidoActualizado = pedido.filter( producto => producto.id !== id)
         setPedido(pedidoActualizado)
-        toast.success('Eliminado del pedido')
+        toast.error('Producto eliminado correctamente')
     }
 
-    // Hacemos disponible las funciones globalmente aca
+    const handleSubmitNuevaOrden = async (logout) => {
+        const token = localStorage.getItem('AUTH_TOKEN')
+         try {
+            const {data} = await clienteAxios.post('/api/pedidos', 
+            {
+                total,
+                productos: pedido.map(producto => {
+                    return {
+                        id: producto.id,
+                        cantidad: producto.cantidad
+                    }
+                })
+            }, 
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+
+            toast.success(data.message);
+            setTimeout(() => {
+                setPedido([])
+            }, 1000);
+
+            setTimeout(() => {
+                localStorage.removeItem('AUTH_TOKEN');
+                logout();
+            }, 3000);
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    const handleClickCompletarPedido = async (id) => {
+        setCargando(true);
+        const token = localStorage.getItem('AUTH_TOKEN');
+        try {
+            const { data } = await clienteAxios.put(`/api/pedidos/${id}`, null, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            toast.success(data.message);
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setCargando(false);
+        }
+    };
+
+    const handleClickProductoAgotado = async (id) => {
+        
+        const token = localStorage.getItem('AUTH_TOKEN');
+        try {
+            const { data } = await clienteAxios.put(`/api/productos/${id}`, null, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            toast.success(data.message);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
     return (
         <QuioscoContext.Provider
             value={{
@@ -97,6 +159,10 @@ const QuioscoProvider = ({children}) => {
                 handleEditarCantidad,
                 handleEliminarProductoPedido,
                 total,
+                cargando , 
+                handleSubmitNuevaOrden,
+                handleClickCompletarPedido,
+                handleClickProductoAgotado,
             }}
         >
             {children}
@@ -107,4 +173,5 @@ const QuioscoProvider = ({children}) => {
 export {
     QuioscoProvider
 }
+
 export default QuioscoContext

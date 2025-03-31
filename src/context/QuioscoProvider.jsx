@@ -1,23 +1,30 @@
-import {createContext, useState, useEffect} from 'react'
-import { toast } from 'react-toastify';
-import clienteAxios from '../config/axios';
-import { Axios } from 'axios';
+import {createContext, useState,useEffect} from 'react'
+import {categorias as categoriasDB} from '../data/categorias'
+import clienteAxios from '../config/axios'
+import {toast} from 'react-toastify'
 
-const QuioscoContext = createContext();
+const QuioscoContext = createContext()
 
 const QuioscoProvider = ({children}) => {
 
-    const [categorias, setCategorias] = useState ([])
-    const [categoriaActual, setCategoriaActual] = useState ({})
-    const [modal, setModal] = useState (false)
+    const [categorias, setCategorias] = useState([]);
+    const [categoriaActual, setCategoriaActual] = useState({});
+    const [modal, setModal] = useState(false);
     // {} porque es un objeto inicia como vacio
-    const [producto, setProducto] = useState ({})
+    const [producto, setProducto] = useState({});
     // Stado para el pedido
-    const [pedido, setPedido] = useState([])
-    const [total, setTotal] = useState(0)
+    const [pedido, setPedido] = useState([]);
+    const [total, setTotal] = useState(0);
+
+    // Calcular Total
+    useEffect(() => {
+        const nuevoTotal = pedido.reduce((total, producto) => (producto.precio * producto.cantidad) + total, 0 )
+        setTotal(nuevoTotal)
+    }, [pedido])
 
     // API desde Laravel Categorias
     const obtenerCategorias = async () => {
+      //  const token = localStorage.getItem('AUTH_TOKEN')
         try {
             const {data} = await clienteAxios('/api/categorias')
             setCategorias(data.data)
@@ -26,14 +33,12 @@ const QuioscoProvider = ({children}) => {
             console.log(error)
         }
     }
+
     useEffect(() => {
         obtenerCategorias();
     }, [])
-    // Calcular Total
-    useEffect(() => {
-        const nuevoTotal = pedido.reduce((total, producto) => (producto.precio * producto.cantidad) + total, 0 )
-        setTotal(nuevoTotal)
-    }, [pedido])
+
+    
 
     const handleClickCategoria = id => {
         const categoria = categorias.filter(categoria => categoria.id === id)[0]
@@ -83,19 +88,21 @@ const QuioscoProvider = ({children}) => {
                 categorias,
                 categoriaActual,
                 handleClickCategoria,
-                modal,
                 handleClickModal,
-                producto,
+                modal,
                 handleSetProducto,
+                producto,
                 pedido,
                 handleAgregarPedido,
                 handleEditarCantidad,
                 handleEliminarProductoPedido,
-                total
+                total,
             }}
-        >{children}</QuioscoContext.Provider>
+        >
+            {children}
+        </QuioscoContext.Provider>
     )
-}
+} 
 
 export {
     QuioscoProvider

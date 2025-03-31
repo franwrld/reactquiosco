@@ -32,7 +32,7 @@ export default function Login() {
 
       <div className="bg-white shadow-sm rounded-md mt-10 px-5 py-10">
         <form onSubmit={handleSubmit} noValidate>
-        { errores ? errores.map((error, i) => <Alerta key={i}>{error}</Alerta>) : null }
+        {errores.length > 0 && errores.map((error, i) => <Alerta key={i}>{error}</Alerta>)}
           <div className="mb-4">
             <label 
               htmlFor="email" 

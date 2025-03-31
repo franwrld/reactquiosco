@@ -1,15 +1,15 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { Route, RouterProvider} from 'react-router-dom'
-import { QuioscoProvider } from './context/QuioscoProvider'
-import router from './router'
-import './index.css'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
+import { RouterProvider } from 'react-router-dom';
+import router from './router';
+import { QuioscoProvider } from './context/QuioscoProvider';
 
-
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
     <QuioscoProvider>
       <RouterProvider router={router} />
-    </QuioscoProvider> 
-  </StrictMode>,
-)
+    </QuioscoProvider>
+  </React.StrictMode>
+);

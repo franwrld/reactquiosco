@@ -4,7 +4,7 @@ import clienteAxios from '../config/axios';
 import Alerta from '../components/Alerta';
 
 export default function Registro() {
-  // Referencias a lo que se ingresa a los inputs
+
   const nameRef = createRef();
   const emailRef = createRef();
   const passwordRef = createRef();

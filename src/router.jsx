@@ -1,4 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom'
+import React from "react";
 import Layout from './layouts/Layout'
 import Inicio from './views/Inicio'
 import Login from './views/Login'
@@ -8,27 +9,25 @@ const router = createBrowserRouter([
     {
         path: '/',
         element: <Layout />,
-        children: [
-            {
-                index: true,
-                element: <Inicio />
-            }
-        ]
+        children: [{
+            index: true,
+            element: <Inicio />
+        }]
     },
     {
-        path: '/auth',
+        path: '/auth',  // La ruta base para Auth
         element: <AuthLayout />,
         children: [
             {
-                path: '/auth/login',
+                path: 'login',  // La ruta es relativa, no es necesario "/auth"
                 element: <Login />
             },
             {
-                path: '/auth/registro',
+                path: 'registro',  // Ruta relativa bajo "/auth"
                 element: <Registro />
             }
         ]
     }
-])
+]);
 
-export default router
+export default router;

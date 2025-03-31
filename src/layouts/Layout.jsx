@@ -1,14 +1,13 @@
+
+import {Outlet} from 'react-router-dom'
 import React from 'react'
-import { Outlet } from 'react-router-dom'
 import Modal from 'react-modal'
 import { ToastContainer } from 'react-toastify'
-import "react-toastify/dist/ReactToastify.css"
-import Sidebar from '../components/sidebar'
+import Sidebar from '../components/Sidebar'
 import Resumen from '../components/Resumen'
 import ModalProducto from '../components/ModalProducto'
 import useQuiosco from '../hooks/useQuiosco'
-// import { useAuth } from '../hooks/useAuth'
-
+import {useAuth} from '../hooks/useAuth'
 const customStyles = {
   content: {
     top: "50%",
@@ -20,27 +19,46 @@ const customStyles = {
   },
 };
 
-Modal.setAppElement('#root')
+Modal.setAppElement("#root");
 
 export default function Layout() {
 
-  // const {user, error} = useAuth({middleware: 'auth'})
-  const { modal } = useQuiosco();
 
+  const {modal} = useQuiosco()
+  const {user,error} = useAuth({middleware: 'auth'})
+  
   return (
-    <>
-      <div className='md:flex'>
-          <Sidebar />
-          <main className='flex-1 h-screen overflow-y-scroll bg-gray-100 p-3'>
-            <Outlet />
-          </main>
-          <Resumen />
-      </div>
 
-      <Modal isOpen={modal} style={customStyles}>
-        <ModalProducto />
-      </Modal>
-      <ToastContainer />
+
+    <>
+
+
+    <div className='md:flex'>
+    
+      <Sidebar/>
+        
+      <main className='flex-1 h-screen overflow-y-scroll bg-gray-100 p-3'>
+      <Outlet/>
+        </main>
+
+      <Resumen/>
+    </div>
+
+      {modal && (
+        <Modal
+          isOpen={modal}
+      
+          style={customStyles}
+          
+        >
+         
+      <ModalProducto/>
+
+        </Modal>
+      )}
+        
+        <ToastContainer/>
+
     </>
   )
 }
